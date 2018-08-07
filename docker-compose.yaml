@@ -1,0 +1,12 @@
+version: '2'
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: luontola/sync-k8s-nodes-to-gcp-dns
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/gcp-keys.json
+    volumes:
+      - ../www-prod-dns-admin-keys.json:/var/secrets/gcp-keys.json:ro
