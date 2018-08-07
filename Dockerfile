@@ -10,6 +10,7 @@ RUN dep ensure -v -vendor-only
 
 # build the app
 COPY src/main /go/src/app
+RUN go test -v
 RUN go install -v .
 
 CMD ["app"]
