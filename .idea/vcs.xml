@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/pkg/dep/sources/https---code.googlesource.com-gocloud" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/pkg/dep/sources/https---code.googlesource.com-google--api--go--client" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/pkg/dep/sources/https---github.com-golang-appengine" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/pkg/dep/sources/https---github.com-golang-protobuf" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/pkg/dep/sources/https---go.googlesource.com-net" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/pkg/dep/sources/https---go.googlesource.com-oauth2" vcs="Git" />
+  </component>
+</project>
