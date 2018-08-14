@@ -4,5 +4,5 @@ set -eu
 cd $(dirname $0)
 export GOPATH=$(pwd)
 
-cd src/main
+cd src/app
 dep "$@"

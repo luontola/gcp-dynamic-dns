@@ -5,11 +5,11 @@ RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 
 # download dependencies
 WORKDIR /go/src/app
-COPY src/main/Gopkg.toml src/main/Gopkg.lock /go/src/app/
+COPY src/app/Gopkg.toml src/app/Gopkg.lock /go/src/app/
 RUN dep ensure -v -vendor-only
 
 # build the app
-COPY src/main /go/src/app
+COPY src/app /go/src/app
 RUN go test -v
 RUN go install -v .
 
