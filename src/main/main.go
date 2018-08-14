@@ -4,22 +4,8 @@
 
 package main
 
-// BEFORE RUNNING:
-// ---------------
-// 1. If not already done, enable the Google Cloud DNS API
-//    and check the quota for your project at
-//    https://console.developers.google.com/apis/api/dns
-// 2. This sample uses Application Default Credentials for authentication.
-//    If not already done, install the gcloud CLI from
-//    https://cloud.google.com/sdk/ and run
-//    `gcloud beta auth application-default login`.
-//    For more information, see
-//    https://developers.google.com/identity/protocols/application-default-credentials
-// 3. Install and update the Go dependencies by running `go get -u` in the
-//    project directory.
-
 import (
-	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/dns/v1"
@@ -52,14 +38,42 @@ func main() {
 	println(project)
 	println(managedZone)
 
-	req := dnsService.ResourceRecordSets.List(project, managedZone)
-	if err := req.Pages(ctx, func(page *dns.ResourceRecordSetsListResponse) error {
-		for _, resourceRecordSet := range page.Rrsets {
-			// TODO: Change code below to process each `resourceRecordSet` resource:
-			fmt.Printf("%#v\n", resourceRecordSet)
+	zones, err := getManagedZones(project, ctx, dnsService)
+	if err != nil {
+		log.Fatal(err)
+	}
+	spew.Dump(zones)
+
+	rrsets, err := getResourceRecordSets(project, managedZone, ctx, dnsService)
+	if err != nil {
+		log.Fatal(err)
+	}
+	spew.Dump(rrsets)
+}
+
+func getManagedZones(project string, ctx context.Context, dnsService *dns.Service) ([]*dns.ManagedZone, error) {
+	var results []*dns.ManagedZone
+	if err := dnsService.ManagedZones.List(project).Pages(ctx, func(page *dns.ManagedZonesListResponse) error {
+		for _, zone := range page.ManagedZones {
+			results = append(results, zone)
 		}
 		return nil
 	}); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+	return results, nil
+}
+
+func getResourceRecordSets(project string, managedZone string, ctx context.Context, dnsService *dns.Service) ([]*dns.ResourceRecordSet, error) {
+	var results []*dns.ResourceRecordSet
+	req := dnsService.ResourceRecordSets.List(project, managedZone)
+	if err := req.Pages(ctx, func(page *dns.ResourceRecordSetsListResponse) error {
+		for _, rrset := range page.Rrsets {
+			results = append(results, rrset)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return results, nil
 }
