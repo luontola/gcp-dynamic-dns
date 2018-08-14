@@ -33,47 +33,58 @@ func main() {
 	}
 
 	project := "www-prod-204113" // TODO: parameterize
-	managedZone := "luontola-fi" // TODO: parameterize
 
-	println(project)
-	println(managedZone)
+	records, err := getDnsRecords(project, ctx, dnsService)
+	if err != nil {
+		log.Fatal(err)
+	}
+	spew.Dump(records)
+}
 
+type DnsRecord struct {
+	ManagedZone string
+	*dns.ResourceRecordSet
+}
+
+func getDnsRecords(project string, ctx context.Context, dnsService *dns.Service) ([]*DnsRecord, error) {
 	zones, err := getManagedZones(project, ctx, dnsService)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	spew.Dump(zones)
+	var records []*DnsRecord
+	for _, zone := range zones {
+		rrsets, err := getResourceRecordSets(project, zone.Name, ctx, dnsService)
+		if err != nil {
+			return nil, err
+		}
+		for _, rrset := range rrsets {
+			record := &DnsRecord{zone.Name, rrset}
+			records = append(records, record)
+		}
 
-	rrsets, err := getResourceRecordSets(project, managedZone, ctx, dnsService)
-	if err != nil {
-		log.Fatal(err)
 	}
-	spew.Dump(rrsets)
+	return records, nil
 }
 
 func getManagedZones(project string, ctx context.Context, dnsService *dns.Service) ([]*dns.ManagedZone, error) {
 	var results []*dns.ManagedZone
-	if err := dnsService.ManagedZones.List(project).Pages(ctx, func(page *dns.ManagedZonesListResponse) error {
+	err := dnsService.ManagedZones.List(project).Pages(ctx, func(page *dns.ManagedZonesListResponse) error {
 		for _, zone := range page.ManagedZones {
 			results = append(results, zone)
 		}
 		return nil
-	}); err != nil {
-		return nil, err
-	}
-	return results, nil
+	})
+	return results, err
 }
 
 func getResourceRecordSets(project string, managedZone string, ctx context.Context, dnsService *dns.Service) ([]*dns.ResourceRecordSet, error) {
 	var results []*dns.ResourceRecordSet
 	req := dnsService.ResourceRecordSets.List(project, managedZone)
-	if err := req.Pages(ctx, func(page *dns.ResourceRecordSetsListResponse) error {
+	err := req.Pages(ctx, func(page *dns.ResourceRecordSetsListResponse) error {
 		for _, rrset := range page.Rrsets {
 			results = append(results, rrset)
 		}
 		return nil
-	}); err != nil {
-		return nil, err
-	}
-	return results, nil
+	})
+	return results, err
 }
