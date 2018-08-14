@@ -14,6 +14,11 @@ import (
 )
 
 func main() {
+	project := os.Getenv("GOOGLE_PROJECT")
+	if project == "" {
+		log.Fatal("Environment variable GOOGLE_PROJECT not set.")
+	}
+
 	googleApplicationCredentials := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	if googleApplicationCredentials == "" {
 		log.Fatal("Environment variable GOOGLE_APPLICATION_CREDENTIALS not set. " +
@@ -22,17 +27,15 @@ func main() {
 
 	ctx := context.Background()
 
-	c, err := google.DefaultClient(ctx, dns.CloudPlatformScope)
+	client, err := google.DefaultClient(ctx, dns.CloudPlatformScope)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	dnsService, err := dns.New(c)
+	dnsService, err := dns.New(client)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	project := "www-prod-204113" // TODO: parameterize
 
 	records, err := getDnsRecords(project, ctx, dnsService)
 	if err != nil {
