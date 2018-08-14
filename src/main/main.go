@@ -41,7 +41,32 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	records = filterDnsRecordsByName(records, "k8s-test1.luontola.fi.", "k8s-test2.luontola.fi.", "k8s-test3.luontola.fi.")
+
 	spew.Dump(records)
+}
+
+func filterDnsRecordsByName(records []*DnsRecord, names ...string) []*DnsRecord {
+	if len(names) == 0 {
+		return []*DnsRecord{}
+	}
+	var results []*DnsRecord
+	for _, record := range records {
+		if equalsAny(record.Name, names) {
+			results = append(results, record)
+		}
+	}
+	return results
+}
+
+func equalsAny(haystack string, needles []string) bool {
+	for _, needle := range needles {
+		if haystack == needle {
+			return true
+		}
+	}
+	return false
 }
 
 type DnsRecord struct {

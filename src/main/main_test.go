@@ -6,21 +6,39 @@ package main
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
+	"google.golang.org/api/dns/v1"
 	"testing"
 )
 
-func TestSpec(t *testing.T) {
+func TestAll(t *testing.T) {
+	Convey("FilterDnsRecordsByNameSpec", t, FilterDnsRecordsByNameSpec)
+}
 
-	// Only pass t into top-level Convey calls
-	Convey("Given some integer with a starting value", t, func() {
-		x := 1
+func FilterDnsRecordsByNameSpec() {
+	records := []*DnsRecord{
+		{"example", &dns.ResourceRecordSet{Name: "foo.example.com."}},
+		{"example", &dns.ResourceRecordSet{Name: "bar.example.com."}},
+		{"example", &dns.ResourceRecordSet{Name: "baz.example.com."}},
+	}
 
-		Convey("When the integer is incremented", func() {
-			x++
+	Convey("Empty search", func() {
+		records = filterDnsRecordsByName(records)
 
-			Convey("The value should be greater by one", func() {
-				So(x, ShouldEqual, 2)
-			})
-		})
+		So(records, ShouldHaveLength, 0)
+	})
+
+	Convey("One match", func() {
+		records = filterDnsRecordsByName(records, "foo.example.com.")
+
+		So(records, ShouldHaveLength, 1)
+		So(records[0].Name, ShouldEqual, "foo.example.com.")
+	})
+
+	Convey("Many matches", func() {
+		records = filterDnsRecordsByName(records, "bar.example.com.", "baz.example.com.")
+
+		So(records, ShouldHaveLength, 2)
+		So(records[0].Name, ShouldEqual, "bar.example.com.")
+		So(records[1].Name, ShouldEqual, "baz.example.com.")
 	})
 }
