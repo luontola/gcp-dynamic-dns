@@ -42,9 +42,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// TODO: parameterize
 	records = filterDnsRecordsByName(records, "k8s-test1.luontola.fi.", "k8s-test2.luontola.fi.", "k8s-test3.luontola.fi.")
 
 	spew.Dump(records)
+
+	// TODO: get the k8s node IPs
+	// TODO: check which DNS records have a different IP
+	// TODO: update DNS records with new IPs
 }
 
 func filterDnsRecordsByName(records []*DnsRecord, names ...string) []*DnsRecord {
