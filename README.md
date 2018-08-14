@@ -12,6 +12,11 @@ Run tests and build the project
 
     docker-compose build
 
-Get inside the container for manual testing
+Run the application
 
-    docker-compose run --rm app bash   
+    docker-compose run --rm app
+
+The application container doesn't have `sh` or other fancy stuff,
+so to inspect its contents use the `docker export` command:
+
+    docker export <container> | tar tv
