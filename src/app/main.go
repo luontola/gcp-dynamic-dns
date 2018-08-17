@@ -89,12 +89,8 @@ func listNodes() {
 	}
 
 	fmt.Printf("There are %d nodes in the cluster\n", len(nodes.Items))
-	spew.Config.Indent = "  "
-	spew.Config.SpewKeys = true
 	for _, node := range nodes.Items {
-		spew.Dump(node)
 		for _, addr := range node.Status.Addresses {
-			spew.Dump(addr)
 			if addr.Type == corev1.NodeExternalIP {
 				println("External IP", addr.Address)
 			}
