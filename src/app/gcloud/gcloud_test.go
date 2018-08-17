@@ -2,7 +2,7 @@
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
-package main
+package gcloud
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestAll(t *testing.T) {
+func TestGCloud(t *testing.T) {
 	Convey("FilterDnsRecordsByNameSpec", t, FilterDnsRecordsByNameSpec)
 }
 

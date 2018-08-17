@@ -10,7 +10,7 @@ RUN dep ensure -v -vendor-only
 
 # build the app
 COPY src/app /go/src/app
-RUN go test -v
+RUN go test -v ./...
 RUN go install -v -ldflags "-linkmode external -extldflags -static" .
 
 # ------------------------------------------------------------
