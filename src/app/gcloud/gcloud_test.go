@@ -22,20 +22,20 @@ func FilterDnsRecordsByNameSpec() {
 	}
 
 	Convey("Empty search", func() {
-		records = filterDnsRecordsByName(records)
+		records = filterDnsRecordsByName(records, []string{})
 
 		So(records, ShouldHaveLength, 0)
 	})
 
 	Convey("One match", func() {
-		records = filterDnsRecordsByName(records, "foo.example.com.")
+		records = filterDnsRecordsByName(records, []string{"foo.example.com."})
 
 		So(records, ShouldHaveLength, 1)
 		So(records[0].Name, ShouldEqual, "foo.example.com.")
 	})
 
 	Convey("Many matches", func() {
-		records = filterDnsRecordsByName(records, "bar.example.com.", "baz.example.com.")
+		records = filterDnsRecordsByName(records, []string{"bar.example.com.", "baz.example.com."})
 
 		So(records, ShouldHaveLength, 2)
 		So(records[0].Name, ShouldEqual, "bar.example.com.")

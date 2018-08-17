@@ -8,7 +8,10 @@ import (
 	"app/gcloud"
 	"app/kube"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
+	"log"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -18,20 +21,45 @@ func main() {
 	}
 	switch command {
 	case "list-nodes":
-		kube.ListNodes()
+		listNodes()
 		os.Exit(0)
 	case "list-dns":
-		gcloud.ListDns()
+		listDns()
 		os.Exit(0)
 	default:
-		fmt.Printf("%v <command>\n", os.Args[0])
-		println("Available commands:")
-		println("  list-nodes  Print list of Kubernetes cluster nodes")
-		println("  list-dns    Print list of DNS records")
-		println("  help        Print this help")
+		printHelp()
 		os.Exit(1)
 	}
 
 	// TODO: check which DNS records have a different IP
 	// TODO: update DNS records with new IPs
+}
+
+func listNodes() {
+	ips := kube.NodeExternalIPs()
+	println("External IPs", strings.Join(ips, ", "))
+}
+
+func printHelp() {
+	fmt.Printf("%v <command>\n", os.Args[0])
+	println("Available commands:")
+	println("  list-nodes  Print list of Kubernetes cluster nodes")
+	println("  list-dns    Print list of DNS records")
+	println("  help        Print this help")
+}
+
+func listDns() {
+	// TODO: parameterize
+	names := []string{"k8s-test1.luontola.fi.", "k8s-test2.luontola.fi.", "k8s-test3.luontola.fi."}
+	project := os.Getenv("GOOGLE_PROJECT")
+	if project == "" {
+		log.Fatal("Environment variable GOOGLE_PROJECT not set.")
+	}
+
+	client := gcloud.Configure(project)
+	records, err := client.DnsRecordsByName(names)
+	if err != nil {
+		log.Fatal(err)
+	}
+	spew.Dump(records)
 }

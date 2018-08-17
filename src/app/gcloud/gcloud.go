@@ -5,7 +5,6 @@
 package gcloud
 
 import (
-	"github.com/davecgh/go-spew/spew"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/dns/v1"
@@ -13,40 +12,51 @@ import (
 	"os"
 )
 
+type Client struct {
+	project    string
+	context    context.Context
+	dnsService *dns.Service
+}
+
 type DnsRecord struct {
 	ManagedZone string
 	*dns.ResourceRecordSet
 }
 
-func ListDns() {
-	project := os.Getenv("GOOGLE_PROJECT")
-	if project == "" {
-		log.Fatal("Environment variable GOOGLE_PROJECT not set.")
-	}
+func Configure(project string) *Client {
 	googleApplicationCredentials := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	if googleApplicationCredentials == "" {
 		log.Fatal("Environment variable GOOGLE_APPLICATION_CREDENTIALS not set. " +
 			"See https://cloud.google.com/docs/authentication/production for instructions.")
 	}
+
 	ctx := context.Background()
 	client, err := google.DefaultClient(ctx, dns.CloudPlatformScope)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	dnsService, err := dns.New(client)
 	if err != nil {
 		log.Fatal(err)
 	}
-	records, err := getDnsRecords(project, ctx, dnsService)
-	if err != nil {
-		log.Fatal(err)
+
+	return &Client{
+		project:    project,
+		context:    ctx,
+		dnsService: dnsService,
 	}
-	// TODO: parameterize
-	records = filterDnsRecordsByName(records, "k8s-test1.luontola.fi.", "k8s-test2.luontola.fi.", "k8s-test3.luontola.fi.")
-	spew.Dump(records)
 }
 
-func filterDnsRecordsByName(records []*DnsRecord, names ...string) []*DnsRecord {
+func (this *Client) DnsRecordsByName(names []string) ([]*DnsRecord, error) {
+	records, err := this.DnsRecords()
+	if err != nil {
+		return nil, err
+	}
+	return filterDnsRecordsByName(records, names), nil
+}
+
+func filterDnsRecordsByName(records []*DnsRecord, names []string) []*DnsRecord {
 	if len(names) == 0 {
 		return []*DnsRecord{}
 	}
@@ -68,14 +78,14 @@ func equalsAny(haystack string, needles []string) bool {
 	return false
 }
 
-func getDnsRecords(project string, ctx context.Context, dnsService *dns.Service) ([]*DnsRecord, error) {
-	zones, err := getManagedZones(project, ctx, dnsService)
+func (this *Client) DnsRecords() ([]*DnsRecord, error) {
+	zones, err := this.ManagedZones()
 	if err != nil {
 		return nil, err
 	}
 	var records []*DnsRecord
 	for _, zone := range zones {
-		rrsets, err := getResourceRecordSets(project, zone.Name, ctx, dnsService)
+		rrsets, err := this.ResourceRecordSets(zone.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -88,9 +98,9 @@ func getDnsRecords(project string, ctx context.Context, dnsService *dns.Service)
 	return records, nil
 }
 
-func getManagedZones(project string, ctx context.Context, dnsService *dns.Service) ([]*dns.ManagedZone, error) {
+func (this *Client) ManagedZones() ([]*dns.ManagedZone, error) {
 	var results []*dns.ManagedZone
-	err := dnsService.ManagedZones.List(project).Pages(ctx, func(page *dns.ManagedZonesListResponse) error {
+	err := this.dnsService.ManagedZones.List(this.project).Pages(this.context, func(page *dns.ManagedZonesListResponse) error {
 		for _, zone := range page.ManagedZones {
 			results = append(results, zone)
 		}
@@ -99,10 +109,10 @@ func getManagedZones(project string, ctx context.Context, dnsService *dns.Servic
 	return results, err
 }
 
-func getResourceRecordSets(project string, managedZone string, ctx context.Context, dnsService *dns.Service) ([]*dns.ResourceRecordSet, error) {
+func (this *Client) ResourceRecordSets(managedZone string) ([]*dns.ResourceRecordSet, error) {
 	var results []*dns.ResourceRecordSet
-	req := dnsService.ResourceRecordSets.List(project, managedZone)
-	err := req.Pages(ctx, func(page *dns.ResourceRecordSetsListResponse) error {
+	req := this.dnsService.ResourceRecordSets.List(this.project, managedZone)
+	err := req.Pages(this.context, func(page *dns.ResourceRecordSetsListResponse) error {
 		for _, rrset := range page.Rrsets {
 			results = append(results, rrset)
 		}

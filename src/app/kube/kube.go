@@ -5,14 +5,13 @@
 package kube
 
 import (
-	"fmt"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
-func ListNodes() {
+func NodeExternalIPs() []string {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err.Error())
@@ -28,12 +27,13 @@ func ListNodes() {
 		panic(err.Error())
 	}
 
-	fmt.Printf("There are %d nodes in the cluster\n", len(nodes.Items))
+	var externalIPs []string
 	for _, node := range nodes.Items {
 		for _, addr := range node.Status.Addresses {
 			if addr.Type == core.NodeExternalIP {
-				println("External IP", addr.Address)
+				externalIPs = append(externalIPs, addr.Address)
 			}
 		}
 	}
+	return externalIPs
 }
