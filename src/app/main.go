@@ -16,49 +16,64 @@ import (
 	"k8s.io/client-go/rest"
 	"log"
 	"os"
-	"time"
 )
 
 func main() {
+	command := "help"
+	if len(os.Args) == 2 {
+		command = os.Args[1]
+	}
+	switch command {
+	case "list-nodes":
+		listNodes()
+		os.Exit(0)
+	case "list-dns":
+		listDns()
+		os.Exit(0)
+	default:
+		fmt.Printf("%v <command>\n", os.Args[0])
+		println("Available commands:")
+		println("  list-nodes  Print list of Kubernetes cluster nodes")
+		println("  list-dns    Print list of DNS records")
+		println("  help        Print this help")
+		os.Exit(1)
+	}
+
+	// TODO: get the k8s node IPs
+	// TODO: check which DNS records have a different IP
+	// TODO: update DNS records with new IPs
+}
+
+func listDns() {
 	project := os.Getenv("GOOGLE_PROJECT")
 	if project == "" {
 		log.Fatal("Environment variable GOOGLE_PROJECT not set.")
 	}
-
 	googleApplicationCredentials := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	if googleApplicationCredentials == "" {
 		log.Fatal("Environment variable GOOGLE_APPLICATION_CREDENTIALS not set. " +
 			"See https://cloud.google.com/docs/authentication/production for instructions.")
 	}
-
 	ctx := context.Background()
-
 	client, err := google.DefaultClient(ctx, dns.CloudPlatformScope)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	dnsService, err := dns.New(client)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	records, err := getDnsRecords(project, ctx, dnsService)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	// TODO: parameterize
 	records = filterDnsRecordsByName(records, "k8s-test1.luontola.fi.", "k8s-test2.luontola.fi.", "k8s-test3.luontola.fi.")
-
 	spew.Dump(records)
+}
 
-	// TODO: get the k8s node IPs
-	// TODO: check which DNS records have a different IP
-	// TODO: update DNS records with new IPs
-
+func listNodes() {
 	// https://github.com/kubernetes/client-go/blob/master/examples/in-cluster-client-configuration/main.go
-
 	// creates the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -69,28 +84,25 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	for {
-		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
-		if err != nil {
-			panic(err.Error())
-		}
-		fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
 
-		// Examples for error handling:
-		// - Use helper functions like e.g. errors.IsNotFound()
-		// - And/or cast to StatusError and use its properties like e.g. ErrStatus.Message
-		_, err = clientset.CoreV1().Pods("default").Get("example-xxxxx", metav1.GetOptions{})
-		if errors.IsNotFound(err) {
-			fmt.Printf("Pod not found\n")
-		} else if statusError, isStatus := err.(*errors.StatusError); isStatus {
-			fmt.Printf("Error getting pod %v\n", statusError.ErrStatus.Message)
-		} else if err != nil {
-			panic(err.Error())
-		} else {
-			fmt.Printf("Found pod\n")
-		}
+	pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
 
-		time.Sleep(10 * time.Second)
+	// Examples for error handling:
+	// - Use helper functions like e.g. errors.IsNotFound()
+	// - And/or cast to StatusError and use its properties like e.g. ErrStatus.Message
+	_, err = clientset.CoreV1().Pods("default").Get("example-xxxxx", metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		fmt.Printf("Pod not found\n")
+	} else if statusError, isStatus := err.(*errors.StatusError); isStatus {
+		fmt.Printf("Error getting pod %v\n", statusError.ErrStatus.Message)
+	} else if err != nil {
+		panic(err.Error())
+	} else {
+		fmt.Printf("Found pod\n")
 	}
 }
 

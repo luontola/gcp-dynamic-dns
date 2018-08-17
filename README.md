@@ -16,7 +16,7 @@ Run tests and build the project
 
 Run the application
 
-    docker-compose run --rm app
+    docker-compose run --rm app help
 
 The application container doesn't have `sh` or other fancy stuff,
 so to inspect its contents use the `docker export` command:
