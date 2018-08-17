@@ -10,6 +10,7 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/dns/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -88,8 +89,16 @@ func listNodes() {
 	}
 
 	fmt.Printf("There are %d nodes in the cluster\n", len(nodes.Items))
+	spew.Config.Indent = "  "
+	spew.Config.SpewKeys = true
 	for _, node := range nodes.Items {
 		spew.Dump(node)
+		for _, addr := range node.Status.Addresses {
+			spew.Dump(addr)
+			if addr.Type == corev1.NodeExternalIP {
+				println("External IP", addr.Address)
+			}
+		}
 	}
 }
 
