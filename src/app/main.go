@@ -43,31 +43,20 @@ func printHelp() {
 	println("  help        Print this help")
 }
 
-func sync() {
-	// TODO: parameterize
-	names := []string{"k8s-test1.luontola.fi.", "k8s-test2.luontola.fi.", "k8s-test3.luontola.fi."}
-	project := os.Getenv("GOOGLE_PROJECT")
-	if project == "" {
-		log.Fatal("Environment variable GOOGLE_PROJECT not set.")
-	}
+// commands
 
-	nodeIPs, err := kube.NodeExternalIPs()
-	if err != nil {
-		log.Fatal("Failed to read Kubernetes node IPs: ", err)
-	}
+func sync() {
+	names := paramDnsNames()
+	project := paramGoogleProject()
+
+	nodeIPs := readNodeIPs()
 	log.Printf("Kubernetes node IPs are %v\n", nodeIPs)
 
 	log.Printf("Updating DNS records %v\n", names)
 	client := gcloud.Configure(project)
-	records, err := client.DnsRecordsByName(names)
-	if err != nil {
-		log.Fatal("Failed to read DNS records: ", err)
-	}
+	records := readDnsRecords(client, names)
+	updated := updateDnsRecords(client, records, nodeIPs)
 
-	updated, err := client.UpdateDnsRecords(records, nodeIPs)
-	if err != nil {
-		log.Fatal("Failed to update DNS records: ", err)
-	}
 	if len(updated) == 0 {
 		log.Println("Nothing to update")
 	} else {
@@ -79,25 +68,59 @@ func sync() {
 }
 
 func listNodes() {
-	nodeIPs, err := kube.NodeExternalIPs()
-	if err != nil {
-		log.Fatal(err)
-	}
+	nodeIPs := readNodeIPs()
+
 	log.Printf("Kubernetes node IPs are %v\n", nodeIPs)
 }
 
 func listDns() {
+	names := paramDnsNames()
+	project := paramGoogleProject()
+
+	client := gcloud.Configure(project)
+	records := readDnsRecords(client, names)
+
+	spew.Dump(records)
+}
+
+// parameters
+
+func paramDnsNames() []string {
 	// TODO: parameterize
 	names := []string{"k8s-test1.luontola.fi.", "k8s-test2.luontola.fi.", "k8s-test3.luontola.fi."}
+	return names
+}
+
+func paramGoogleProject() string {
 	project := os.Getenv("GOOGLE_PROJECT")
 	if project == "" {
 		log.Fatal("Environment variable GOOGLE_PROJECT not set.")
 	}
+	return project
+}
 
-	client := gcloud.Configure(project)
+// operations
+
+func readNodeIPs() []string {
+	nodeIPs, err := kube.NodeExternalIPs()
+	if err != nil {
+		log.Fatal("Failed to read Kubernetes node IPs: ", err)
+	}
+	return nodeIPs
+}
+
+func readDnsRecords(client *gcloud.Client, names []string) gcloud.DnsRecords {
 	records, err := client.DnsRecordsByName(names)
 	if err != nil {
 		log.Fatal("Failed to read DNS records: ", err)
 	}
-	spew.Dump(records)
+	return records
+}
+
+func updateDnsRecords(client *gcloud.Client, records gcloud.DnsRecords, newValues []string) gcloud.DnsRecords {
+	updated, err := client.UpdateDnsRecords(records, newValues)
+	if err != nil {
+		log.Fatal("Failed to update DNS records: ", err)
+	}
+	return updated
 }

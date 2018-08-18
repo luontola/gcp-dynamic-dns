@@ -9,20 +9,27 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"log"
 )
 
-func NodeExternalIPs() ([]string, error) {
+func configure() *kubernetes.Clientset {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
+	client, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 
-	nodes, err := clientset.CoreV1().Nodes().List(meta.ListOptions{})
+	return client
+}
+
+func NodeExternalIPs() ([]string, error) {
+	client := configure() // TODO: create a client wrapper (as in gcloud package) if we need more kube operations
+
+	nodes, err := client.CoreV1().Nodes().List(meta.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
