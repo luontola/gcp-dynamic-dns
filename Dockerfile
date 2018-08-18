@@ -7,6 +7,7 @@ RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 WORKDIR /go/src/app
 COPY src/app/Gopkg.toml src/app/Gopkg.lock /go/src/app/
 RUN dep ensure -v -vendor-only
+RUN go build -v all
 
 # build the app
 COPY src/app /go/src/app
