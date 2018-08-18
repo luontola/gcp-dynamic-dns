@@ -12,6 +12,8 @@ import (
 
 func TestGCloud(t *testing.T) {
 	Convey("FilterDnsRecordsByNameSpec", t, FilterDnsRecordsByNameSpec)
+	Convey("GroupDnsRecordsByZoneSpec", t, GroupDnsRecordsByZoneSpec)
+	Convey("UpdateDnsRecordValuesSpec", t, UpdateDnsRecordValuesSpec)
 }
 
 func FilterDnsRecordsByNameSpec() {
@@ -40,5 +42,108 @@ func FilterDnsRecordsByNameSpec() {
 		So(records, ShouldHaveLength, 2)
 		So(records[0].Name, ShouldEqual, "bar.example.com.")
 		So(records[1].Name, ShouldEqual, "baz.example.com.")
+	})
+}
+
+func GroupDnsRecordsByZoneSpec() {
+	records := DnsRecords{
+		{"zone1", &dns.ResourceRecordSet{Name: "zone1.com."}},
+		{"zone2", &dns.ResourceRecordSet{Name: "zone2.com."}},
+		{"zone2", &dns.ResourceRecordSet{Name: "www.zone2.com."}},
+	}
+
+	So(records.GroupByZone(), ShouldResemble, map[string]DnsRecords{
+		"zone1": {
+			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com."}},
+		},
+		"zone2": {
+			{"zone2", &dns.ResourceRecordSet{Name: "zone2.com."}},
+			{"zone2", &dns.ResourceRecordSet{Name: "www.zone2.com."}},
+		},
+	})
+}
+
+func UpdateDnsRecordValuesSpec() {
+	Convey("one record, one value", func() {
+		records := DnsRecords{
+			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
+		}
+
+		changes := changesToUpdateDnsRecordValues(records, []string{"2.2.2.2"})
+
+		So(changes, ShouldResemble, &dns.Change{
+			Deletions: []*dns.ResourceRecordSet{
+				{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1"}},
+			},
+			Additions: []*dns.ResourceRecordSet{
+				{Name: "zone1.com.", Rrdatas: []string{"2.2.2.2"}},
+			},
+		})
+	})
+
+	Convey("multiple records", func() {
+		records := DnsRecords{
+			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
+			{"zone1", &dns.ResourceRecordSet{Name: "www.zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
+		}
+
+		changes := changesToUpdateDnsRecordValues(records, []string{"2.2.2.2"})
+
+		So(changes, ShouldResemble, &dns.Change{
+			Deletions: []*dns.ResourceRecordSet{
+				{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1"}},
+				{Name: "www.zone1.com.", Rrdatas: []string{"1.1.1.1"}},
+			},
+			Additions: []*dns.ResourceRecordSet{
+				{Name: "zone1.com.", Rrdatas: []string{"2.2.2.2"}},
+				{Name: "www.zone1.com.", Rrdatas: []string{"2.2.2.2"}},
+			},
+		})
+	})
+
+	Convey("multiple values", func() {
+		records := DnsRecords{
+			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1", "2.2.2.2"}}},
+		}
+
+		changes := changesToUpdateDnsRecordValues(records, []string{"3.3.3.3", "4.4.4.4"})
+
+		So(changes, ShouldResemble, &dns.Change{
+			Deletions: []*dns.ResourceRecordSet{
+				{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1", "2.2.2.2"}},
+			},
+			Additions: []*dns.ResourceRecordSet{
+				{Name: "zone1.com.", Rrdatas: []string{"3.3.3.3", "4.4.4.4"}},
+			},
+		})
+	})
+
+	Convey("some records up to date", func() {
+		records := DnsRecords{
+			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"2.2.2.2"}}},
+			{"zone1", &dns.ResourceRecordSet{Name: "www.zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
+		}
+
+		changes := changesToUpdateDnsRecordValues(records, []string{"2.2.2.2"})
+
+		So(changes, ShouldResemble, &dns.Change{
+			Deletions: []*dns.ResourceRecordSet{
+				{Name: "www.zone1.com.", Rrdatas: []string{"1.1.1.1"}},
+			},
+			Additions: []*dns.ResourceRecordSet{
+				{Name: "www.zone1.com.", Rrdatas: []string{"2.2.2.2"}},
+			},
+		})
+	})
+
+	Convey("all records up to date", func() {
+		records := DnsRecords{
+			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"2.2.2.2"}}},
+			{"zone1", &dns.ResourceRecordSet{Name: "www.zone1.com.", Rrdatas: []string{"2.2.2.2"}}},
+		}
+
+		changes := changesToUpdateDnsRecordValues(records, []string{"2.2.2.2"})
+
+		So(changes, ShouldEqual, nil)
 	})
 }

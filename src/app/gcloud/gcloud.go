@@ -5,22 +5,20 @@
 package gcloud
 
 import (
+	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/dns/v1"
 	"log"
 	"os"
+	"reflect"
 )
 
 type Client struct {
 	project    string
 	context    context.Context
 	dnsService *dns.Service
-}
-
-type DnsRecord struct {
-	ManagedZone string
-	*dns.ResourceRecordSet
 }
 
 func Configure(project string) *Client {
@@ -48,7 +46,7 @@ func Configure(project string) *Client {
 	}
 }
 
-func (this *Client) DnsRecordsByName(names []string) ([]*DnsRecord, error) {
+func (this *Client) DnsRecordsByName(names []string) (DnsRecords, error) {
 	records, err := this.DnsRecords()
 	if err != nil {
 		return nil, err
@@ -56,11 +54,11 @@ func (this *Client) DnsRecordsByName(names []string) ([]*DnsRecord, error) {
 	return filterDnsRecordsByName(records, names), nil
 }
 
-func filterDnsRecordsByName(records []*DnsRecord, names []string) []*DnsRecord {
+func filterDnsRecordsByName(records DnsRecords, names []string) DnsRecords {
 	if len(names) == 0 {
-		return []*DnsRecord{}
+		return DnsRecords{}
 	}
-	var results []*DnsRecord
+	var results DnsRecords
 	for _, record := range records {
 		if equalsAny(record.Name, names) {
 			results = append(results, record)
@@ -78,12 +76,12 @@ func equalsAny(haystack string, needles []string) bool {
 	return false
 }
 
-func (this *Client) DnsRecords() ([]*DnsRecord, error) {
+func (this *Client) DnsRecords() (DnsRecords, error) {
 	zones, err := this.ManagedZones()
 	if err != nil {
 		return nil, err
 	}
-	var records []*DnsRecord
+	var records DnsRecords
 	for _, zone := range zones {
 		rrsets, err := this.ResourceRecordSets(zone.Name)
 		if err != nil {
@@ -119,4 +117,53 @@ func (this *Client) ResourceRecordSets(managedZone string) ([]*dns.ResourceRecor
 		return nil
 	})
 	return results, err
+}
+
+func (this *Client) UpdateDnsRecords(records DnsRecords, newValues []string) error {
+	for managedZone, recordsInZone := range records.GroupByZone() {
+		changes := changesToUpdateDnsRecordValues(recordsInZone, newValues)
+		if changes == nil {
+			continue
+		}
+		resp, err := this.dnsService.Changes.Create(this.project, managedZone, changes).Context(this.context).Do()
+		if err != nil {
+			return err
+		}
+		// TODO
+		spew.Dump(resp)
+		fmt.Printf("response: %#v\n", resp)
+	}
+	return nil
+}
+
+func changesToUpdateDnsRecordValues(records DnsRecords, newValues []string) *dns.Change {
+	changes := &dns.Change{}
+	for _, record := range records {
+		if reflect.DeepEqual(record.Rrdatas, newValues) {
+			continue
+		}
+		changes.Deletions = append(changes.Deletions, record.ResourceRecordSet)
+		addition := *record.ResourceRecordSet
+		addition.Rrdatas = newValues
+		changes.Additions = append(changes.Additions, &addition)
+	}
+	if len(changes.Additions) == 0 {
+		return nil
+	}
+	return changes
+}
+
+type DnsRecord struct {
+	ManagedZone string
+	*dns.ResourceRecordSet
+}
+
+type DnsRecords []*DnsRecord
+
+func (records DnsRecords) GroupByZone() map[string]DnsRecords {
+	byZone := make(map[string]DnsRecords)
+	for _, record := range records {
+		byZone[record.ManagedZone] = append(byZone[record.ManagedZone], record)
+	}
+	return byZone
 }
