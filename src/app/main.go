@@ -11,7 +11,6 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"log"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -45,31 +44,46 @@ func printHelp() {
 }
 
 func sync() {
-	// TODO
-	//nodeIPs := kube.NodeExternalIPs()
-	nodeIPs := []string{"1.1.1.1", "2.2.2.2"}
-
+	// TODO: parameterize
 	names := []string{"k8s-test1.luontola.fi.", "k8s-test2.luontola.fi.", "k8s-test3.luontola.fi."}
 	project := os.Getenv("GOOGLE_PROJECT")
 	if project == "" {
 		log.Fatal("Environment variable GOOGLE_PROJECT not set.")
 	}
 
+	nodeIPs, err := kube.NodeExternalIPs()
+	if err != nil {
+		log.Fatal("Failed to read Kubernetes node IPs: ", err)
+	}
+	log.Printf("Kubernetes node IPs are %v\n", nodeIPs)
+
+	log.Printf("Updating DNS records %v\n", names)
 	client := gcloud.Configure(project)
 	records, err := client.DnsRecordsByName(names)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to read DNS records: ", err)
 	}
 
-	err = client.UpdateDnsRecords(records, nodeIPs)
+	updated, err := client.UpdateDnsRecords(records, nodeIPs)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to update DNS records: ", err)
+	}
+	if len(updated) == 0 {
+		log.Println("Nothing to update")
+	} else {
+		log.Printf("Updated %d DNS records:\n", len(updated))
+		for _, record := range updated {
+			log.Printf("    %s -> %v\n", record.Name, record.Rrdatas)
+		}
 	}
 }
 
 func listNodes() {
-	nodeIPs := kube.NodeExternalIPs()
-	println("External IPs", strings.Join(nodeIPs, ", "))
+	nodeIPs, err := kube.NodeExternalIPs()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Kubernetes node IPs are %v\n", nodeIPs)
 }
 
 func listDns() {
@@ -83,7 +97,7 @@ func listDns() {
 	client := gcloud.Configure(project)
 	records, err := client.DnsRecordsByName(names)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to read DNS records: ", err)
 	}
 	spew.Dump(records)
 }

@@ -11,20 +11,20 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func NodeExternalIPs() []string {
+func NodeExternalIPs() ([]string, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
 	nodes, err := clientset.CoreV1().Nodes().List(meta.ListOptions{})
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
 	var externalIPs []string
@@ -35,5 +35,5 @@ func NodeExternalIPs() []string {
 			}
 		}
 	}
-	return externalIPs
+	return externalIPs, nil
 }

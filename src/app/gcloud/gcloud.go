@@ -5,8 +5,6 @@
 package gcloud
 
 import (
-	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/dns/v1"
@@ -119,7 +117,8 @@ func (this *Client) ResourceRecordSets(managedZone string) ([]*dns.ResourceRecor
 	return results, err
 }
 
-func (this *Client) UpdateDnsRecords(records DnsRecords, newValues []string) error {
+func (this *Client) UpdateDnsRecords(records DnsRecords, newValues []string) (DnsRecords, error) {
+	var updated DnsRecords
 	for managedZone, recordsInZone := range records.GroupByZone() {
 		changes := changesToUpdateDnsRecordValues(recordsInZone, newValues)
 		if changes == nil {
@@ -127,13 +126,12 @@ func (this *Client) UpdateDnsRecords(records DnsRecords, newValues []string) err
 		}
 		resp, err := this.dnsService.Changes.Create(this.project, managedZone, changes).Context(this.context).Do()
 		if err != nil {
-			return err
+			return nil, err
 		}
-		// TODO
-		spew.Dump(resp)
-		fmt.Printf("response: %#v\n", resp)
+
+		updated = append(updated, ToDnsRecords(managedZone, resp.Additions)...)
 	}
-	return nil
+	return updated, nil
 }
 
 func changesToUpdateDnsRecordValues(records DnsRecords, newValues []string) *dns.Change {
@@ -159,6 +157,14 @@ type DnsRecord struct {
 }
 
 type DnsRecords []*DnsRecord
+
+func ToDnsRecords(managedZone string, records []*dns.ResourceRecordSet) DnsRecords {
+	var results DnsRecords
+	for _, record := range records {
+		results = append(results, &DnsRecord{ManagedZone: managedZone, ResourceRecordSet: record})
+	}
+	return results
+}
 
 func (records DnsRecords) GroupByZone() map[string]DnsRecords {
 	byZone := make(map[string]DnsRecords)
