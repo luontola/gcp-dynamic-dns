@@ -11,7 +11,9 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"log"
 	"os"
+	"reflect"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -22,6 +24,9 @@ func main() {
 	switch command {
 	case "sync":
 		sync()
+		os.Exit(0)
+	case "sync-once":
+		syncOnce()
 		os.Exit(0)
 	case "list-nodes":
 		listNodes()
@@ -38,7 +43,8 @@ func main() {
 func printHelp() {
 	fmt.Printf("%v <command>\n", os.Args[0])
 	println("Available commands:")
-	println("  sync        Update DNS records with Kubernetes cluster nodes")
+	println("  sync        Update DNS records with Kubernetes cluster nodes continuously")
+	println("  sync-once   Update DNS records with Kubernetes cluster nodes once")
 	println("  list-nodes  Print list of Kubernetes cluster nodes")
 	println("  list-dns    Print list of DNS records")
 	println("  help        Print this help")
@@ -49,12 +55,32 @@ func printHelp() {
 func sync() {
 	names := paramDnsNames()
 	project := paramGoogleProject()
+	client := gcloud.Configure(project)
+
+	var previousNodeIPs []string
+	for {
+		nodeIPs := readNodeIPs()
+		if !reflect.DeepEqual(nodeIPs, previousNodeIPs) {
+			handleChangedNodeIPs(nodeIPs, names, client)
+			previousNodeIPs = nodeIPs
+		}
+		time.Sleep(time.Minute)
+	}
+}
+
+func syncOnce() {
+	names := paramDnsNames()
+	project := paramGoogleProject()
+	client := gcloud.Configure(project)
 
 	nodeIPs := readNodeIPs()
+	handleChangedNodeIPs(nodeIPs, names, client)
+}
+
+func handleChangedNodeIPs(nodeIPs []string, names []string, client *gcloud.Client) {
 	log.Printf("Kubernetes node IPs are %v\n", nodeIPs)
 
 	log.Printf("Updating DNS records %v\n", names)
-	client := gcloud.Configure(project)
 	records := readDnsRecords(client, names)
 	updated := updateDnsRecords(client, records, nodeIPs)
 
