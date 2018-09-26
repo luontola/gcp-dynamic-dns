@@ -11,6 +11,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -86,9 +87,11 @@ func listDns() {
 // parameters
 
 func paramDnsNames() []string {
-	// TODO: parameterize
-	names := []string{"k8s-test1.luontola.fi.", "k8s-test2.luontola.fi.", "k8s-test3.luontola.fi."}
-	return names
+	dnsNames := os.Getenv("DNS_NAMES")
+	if dnsNames == "" {
+		log.Fatal("Environment variable DNS_NAMES not set.")
+	}
+	return strings.Split(dnsNames, " ")
 }
 
 func paramGoogleProject() string {
