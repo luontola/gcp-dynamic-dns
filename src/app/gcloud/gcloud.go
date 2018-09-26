@@ -5,6 +5,8 @@
 package gcloud
 
 import (
+	"errors"
+	"fmt"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/dns/v1"
@@ -49,7 +51,11 @@ func (this *Client) DnsRecordsByName(names []string) (DnsRecords, error) {
 	if err != nil {
 		return nil, err
 	}
-	return filterDnsRecordsByName(records, names), nil
+	found := filterDnsRecordsByName(records, names)
+	if len(found) != len(names) {
+		return nil, errors.New(fmt.Sprintf("Expected DNS records %v but only found %v of them from the available %v", names, found.GetNames(), records.GetNames()))
+	}
+	return found, nil
 }
 
 func filterDnsRecordsByName(records DnsRecords, names []string) DnsRecords {
@@ -172,4 +178,12 @@ func (records DnsRecords) GroupByZone() map[string]DnsRecords {
 		byZone[record.ManagedZone] = append(byZone[record.ManagedZone], record)
 	}
 	return byZone
+}
+
+func (records DnsRecords) GetNames() []string {
+	names := make([]string, len(records))
+	for i, record := range records {
+		names[i] = record.Name
+	}
+	return names
 }
