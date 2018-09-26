@@ -56,6 +56,7 @@ func sync() {
 	log.Printf("Updating DNS records %v\n", names)
 	client := gcloud.Configure(project)
 	records := readDnsRecords(client, names)
+	checkDnsRecordsHaveType("A", records)
 	updated := updateDnsRecords(client, records, nodeIPs)
 
 	if len(updated) == 0 {
@@ -126,4 +127,12 @@ func updateDnsRecords(client *gcloud.Client, records gcloud.DnsRecords, newValue
 		log.Fatal("Failed to update DNS records: ", err)
 	}
 	return updated
+}
+
+func checkDnsRecordsHaveType(expectedType string, records gcloud.DnsRecords) {
+	for _, record := range records {
+		if record.Type != expectedType {
+			log.Fatalf("Only type %v records are supported, but %v is type %v", expectedType, record.Name, record.Type)
+		}
+	}
 }
