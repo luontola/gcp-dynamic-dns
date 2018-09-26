@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strings"
 )
 
 type Client struct {
@@ -46,14 +47,19 @@ func Configure(project string) *Client {
 	}
 }
 
-func (this *Client) DnsRecordsByName(names []string) (DnsRecords, error) {
+func (this *Client) DnsRecordsByNameAndType(names []string, recordType string) (DnsRecords, error) {
 	records, err := this.DnsRecords()
 	if err != nil {
 		return nil, err
 	}
 	found := filterDnsRecordsByName(records, names)
+	found = filterDnsRecordsByType(found, recordType)
 	if len(found) != len(names) {
-		return nil, errors.New(fmt.Sprintf("Expected DNS records %v but only found %v of them from the available %v", names, found.GetNames(), records.GetNames()))
+		return nil, errors.New(fmt.Sprintf("Expected DNS records <%v> of type <%v>, but only found <%v> of them from the available <%v>",
+			strings.Join(names, ", "),
+			recordType,
+			strings.Join(found.NamesAndTypes(), ", "),
+			strings.Join(records.NamesAndTypes(), ", ")))
 	}
 	return found, nil
 }
@@ -78,6 +84,16 @@ func equalsAny(haystack string, needles []string) bool {
 		}
 	}
 	return false
+}
+
+func filterDnsRecordsByType(records DnsRecords, recordType string) DnsRecords {
+	var results DnsRecords
+	for _, record := range records {
+		if record.Type == recordType {
+			results = append(results, record)
+		}
+	}
+	return results
 }
 
 func (this *Client) DnsRecords() (DnsRecords, error) {
@@ -162,6 +178,10 @@ type DnsRecord struct {
 	*dns.ResourceRecordSet
 }
 
+func (record DnsRecord) NameAndType() string {
+	return fmt.Sprintf("%v %v", record.Name, record.Type)
+}
+
 type DnsRecords []*DnsRecord
 
 func ToDnsRecords(managedZone string, records []*dns.ResourceRecordSet) DnsRecords {
@@ -180,10 +200,10 @@ func (records DnsRecords) GroupByZone() map[string]DnsRecords {
 	return byZone
 }
 
-func (records DnsRecords) GetNames() []string {
+func (records DnsRecords) NamesAndTypes() []string {
 	names := make([]string, len(records))
 	for i, record := range records {
-		names[i] = record.Name
+		names[i] = record.NameAndType()
 	}
 	return names
 }

@@ -12,6 +12,7 @@ import (
 
 func TestGCloud(t *testing.T) {
 	Convey("FilterDnsRecordsByNameSpec", t, FilterDnsRecordsByNameSpec)
+	Convey("FilterDnsRecordsByTypeSpec", t, FilterDnsRecordsByTypeSpec)
 	Convey("GroupDnsRecordsByZoneSpec", t, GroupDnsRecordsByZoneSpec)
 	Convey("UpdateDnsRecordValuesSpec", t, UpdateDnsRecordValuesSpec)
 }
@@ -43,6 +44,20 @@ func FilterDnsRecordsByNameSpec() {
 		So(records[0].Name, ShouldEqual, "bar.example.com.")
 		So(records[1].Name, ShouldEqual, "baz.example.com.")
 	})
+}
+
+func FilterDnsRecordsByTypeSpec() {
+	records := []*DnsRecord{
+		{"example", &dns.ResourceRecordSet{Name: "a1.example.com.", Type: "A"}},
+		{"example", &dns.ResourceRecordSet{Name: "cname.example.com.", Type: "CNAME"}},
+		{"example", &dns.ResourceRecordSet{Name: "a2.example.com.", Type: "A"}},
+	}
+
+	records = filterDnsRecordsByType(records, "A")
+
+	So(records, ShouldHaveLength, 2)
+	So(records[0].Name, ShouldEqual, "a1.example.com.")
+	So(records[1].Name, ShouldEqual, "a2.example.com.")
 }
 
 func GroupDnsRecordsByZoneSpec() {
