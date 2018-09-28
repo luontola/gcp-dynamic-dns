@@ -105,8 +105,7 @@ spec:
     spec:
       containers:
       - name: dns-updater
-        image: luontola/sync-k8s-nodes-to-gcp-dns
-        imagePullPolicy: Always
+        image: luontola/sync-k8s-nodes-to-gcp-dns:v1.0
         command: ["/app", "sync"]
         env:
         - name: DNS_NAMES
