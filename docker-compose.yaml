@@ -5,9 +5,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: luontola/sync-k8s-nodes-to-gcp-dns
+    image: luontola/gcp-dynamic-dns
     environment:
-      DNS_NAMES: k8s-test1.luontola.fi. k8s-test2.luontola.fi. k8s-test3.luontola.fi.
+      DNS_NAMES: dyndns-test1.luontola.fi. dyndns-test2.luontola.fi. dyndns-test3.luontola.fi.
       GOOGLE_PROJECT: www-prod-204113
       GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/gcp-keys.json
     volumes:

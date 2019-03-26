@@ -1,4 +1,4 @@
-// Copyright © 2018 Esko Luontola
+// Copyright © 2019 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -6,12 +6,11 @@ package main
 
 import (
 	"app/gcloud"
-	"app/kube"
+	"app/ip"
 	"fmt"
 	"github.com/davecgh/go-spew/spew"
 	"log"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -28,8 +27,8 @@ func main() {
 	case "sync-once":
 		syncOnce()
 		os.Exit(0)
-	case "list-nodes":
-		listNodes()
+	case "list-ip":
+		listIP()
 		os.Exit(0)
 	case "list-dns":
 		listDns()
@@ -43,10 +42,10 @@ func main() {
 func printHelp() {
 	fmt.Printf("%v <command>\n", os.Args[0])
 	println("Available commands:")
-	println("  sync        Update DNS records with Kubernetes cluster nodes continuously")
-	println("  sync-once   Update DNS records with Kubernetes cluster nodes once")
-	println("  list-nodes  Print list of Kubernetes cluster nodes")
-	println("  list-dns    Print list of DNS records")
+	println("  sync        Update DNS records continuously")
+	println("  sync-once   Update DNS records once")
+	println("  list-ip     Print current IP address")
+	println("  list-dns    Print current DNS records")
 	println("  help        Print this help")
 }
 
@@ -57,12 +56,12 @@ func sync() {
 	project := paramGoogleProject()
 	client := gcloud.Configure(project)
 
-	var previousNodeIPs []string
+	var previousIP string
 	for {
-		nodeIPs := readNodeIPs()
-		if !reflect.DeepEqual(nodeIPs, previousNodeIPs) {
-			handleChangedNodeIPs(nodeIPs, names, client)
-			previousNodeIPs = nodeIPs
+		currentIP := readCurrentIP()
+		if currentIP != previousIP {
+			handleChangedIP(currentIP, names, client)
+			previousIP = currentIP
 		}
 		time.Sleep(time.Minute)
 	}
@@ -73,16 +72,16 @@ func syncOnce() {
 	project := paramGoogleProject()
 	client := gcloud.Configure(project)
 
-	nodeIPs := readNodeIPs()
-	handleChangedNodeIPs(nodeIPs, names, client)
+	currentIP := readCurrentIP()
+	handleChangedIP(currentIP, names, client)
 }
 
-func handleChangedNodeIPs(nodeIPs []string, names []string, client *gcloud.Client) {
-	log.Printf("Kubernetes node IPs are %v\n", nodeIPs)
+func handleChangedIP(currentIP string, names []string, client *gcloud.Client) {
+	log.Printf("Current IP is %v\n", currentIP)
 
 	log.Printf("Updating DNS records %v\n", names)
 	records := readDnsRecords(client, names)
-	updated := updateDnsRecords(client, records, nodeIPs)
+	updated := updateDnsRecords(client, records, []string{currentIP})
 
 	if len(updated) == 0 {
 		log.Println("Nothing to update")
@@ -94,10 +93,10 @@ func handleChangedNodeIPs(nodeIPs []string, names []string, client *gcloud.Clien
 	}
 }
 
-func listNodes() {
-	nodeIPs := readNodeIPs()
+func listIP() {
+	currentIP := readCurrentIP()
 
-	log.Printf("Kubernetes node IPs are %v\n", nodeIPs)
+	log.Printf("Current IP is %v\n", currentIP)
 }
 
 func listDns() {
@@ -130,12 +129,12 @@ func paramGoogleProject() string {
 
 // operations
 
-func readNodeIPs() []string {
-	nodeIPs, err := kube.NodeExternalIPs()
+func readCurrentIP() string {
+	currentIP, err := ip.CurrentIP()
 	if err != nil {
-		log.Fatal("Failed to read Kubernetes node IPs: ", err)
+		log.Fatal("Failed to read current IP: ", err)
 	}
-	return nodeIPs
+	return currentIP
 }
 
 func readDnsRecords(client *gcloud.Client, names []string) gcloud.DnsRecords {
