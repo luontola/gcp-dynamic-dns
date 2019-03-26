@@ -1,4 +1,4 @@
-FROM golang:1.10 AS builder
+FROM golang:1.12 AS builder
 
 # tools
 RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh

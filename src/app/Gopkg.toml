@@ -37,10 +37,10 @@
   branch = "master"
   name = "google.golang.org/api"
 
+[[constraint]]
+  name = "github.com/davecgh/go-spew"
+  version = "1.1.1"
+
 [prune]
   go-tests = true
   unused-packages = true
-
-[[constraint]]
-  name = "github.com/davecgh/go-spew"
-  version = "1.1.0"
