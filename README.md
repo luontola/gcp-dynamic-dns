@@ -3,7 +3,7 @@
 
 Syncs the current IP address, based on the local network interface, to Google Cloud DNS records. 
 
-[![Docker Build Status](https://img.shields.io/docker/build/luontola/gcp-dynamic-dns.svg)](https://hub.docker.com/r/luontola/gcp-dynamic-dns/)
+[![Docker Build Status](https://img.shields.io/docker/cloud/build/luontola/gcp-dynamic-dns.svg)](https://hub.docker.com/r/luontola/gcp-dynamic-dns/)
 
 
 ## Using
