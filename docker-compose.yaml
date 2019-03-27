@@ -6,6 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: luontola/gcp-dynamic-dns
+    network_mode: host
     environment:
       DNS_NAMES: dyndns-test1.luontola.fi. dyndns-test2.luontola.fi. dyndns-test3.luontola.fi.
       GOOGLE_PROJECT: www-prod-204113
