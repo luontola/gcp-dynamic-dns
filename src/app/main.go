@@ -130,7 +130,7 @@ func paramGoogleProject() string {
 // operations
 
 func readCurrentIP() string {
-	currentIP, err := ip.CurrentIP()
+	currentIP, err := ip.OutgoingIP()
 	if err != nil {
 		log.Fatal("Failed to read current IP: ", err)
 	}

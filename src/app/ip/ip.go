@@ -4,7 +4,20 @@
 
 package ip
 
-func CurrentIP() (string, error) {
-	// TODO
-	return "127.0.0.1", nil
+import (
+	"net"
+)
+
+func OutgoingIP() (string, error) {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	ip := localAddr.IP.String()
+	return ip, nil
 }
+
+// TODO: parameterize network interface name
