@@ -111,12 +111,16 @@ func listDns() {
 
 // parameters
 
+func paramInterfaceName() string {
+	return os.Getenv("INTERFACE_NAME")
+}
+
 func paramDnsNames() []string {
-	dnsNames := os.Getenv("DNS_NAMES")
-	if dnsNames == "" {
+	names := os.Getenv("DNS_NAMES")
+	if names == "" {
 		log.Fatal("Environment variable DNS_NAMES not set.")
 	}
-	return strings.Split(dnsNames, " ")
+	return strings.Split(names, " ")
 }
 
 func paramGoogleProject() string {
@@ -130,8 +134,13 @@ func paramGoogleProject() string {
 // operations
 
 func readCurrentIP() string {
-	// TODO: parameterize network interface name
-	currentIP, err := ip.OutgoingIP()
+	var currentIP string
+	var err error
+	if name := paramInterfaceName(); name != "" {
+		currentIP, err = ip.InterfaceIP(name)
+	} else {
+		currentIP, err = ip.OutgoingIP()
+	}
 	if err != nil {
 		log.Fatal("Failed to read current IP: ", err)
 	}
