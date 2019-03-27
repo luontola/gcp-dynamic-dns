@@ -25,7 +25,7 @@ Example: `eth0`
 
 #### `DNS_NAMES`
 
-In `DNS_NAMES` list all the domain names you wish to update. They all must be type `A` DNS records. Separate the domain names with one space. Each name must end with a period.
+List of domain names to update. Separate the domain names with one space. Each name must end with a period. The DNS records must already exist on Cloud DNS and they must be type `A` records.
 
 Example: `example.com. subdomain.example.com. example.org.`
 
