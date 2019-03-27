@@ -50,7 +50,7 @@ Example: `/path/to/dns-updater-gcp-keys.json`
 
 Run tests and build the project
 
-    docker-compose build
+    docker-compose build --force-rm
 
 Run the application
 
