@@ -9,9 +9,9 @@ Syncs the current IP address, based on the local network interface, to Google Cl
 
 ## Using
 
-Run this application's container using the command `["/app", "sync"]`, set to restart always, and it will sync the IP address automatically whenever it changes.
+Run this application's container using the command `sync` (entrypoint `/app`), `host` network and restart policy `always`. It will then sync the IP address automatically whenever it changes.
 
-For a list of other commands, run `["/app", "help"]`. 
+For a list of other commands, run the `help` command. 
 
 
 ### Environment variables
