@@ -13,11 +13,25 @@ import (
 
 func TestIP(t *testing.T) {
 	Convey("OutgoingIPSpec", t, OutgoingIPSpec)
+	Convey("InterfaceIPSpec", t, InterfaceIPSpec)
 }
 
 func OutgoingIPSpec() {
-	Convey("returns IP address", func() {
+	Convey("automatically detects the outgoing IP address", func() {
 		ip, err := OutgoingIP()
+		So(err, ShouldBeNil)
+		So(ip, ShouldMatchPattern, IpAddress)
+	})
+}
+
+func InterfaceIPSpec() {
+	Convey("returns loopback interface's IP address", func() {
+		ip, err := InterfaceIP("lo")
+		So(err, ShouldBeNil)
+		So(ip, ShouldEqual, "127.0.0.1")
+	})
+	Convey("returns named interface's IP address", func() {
+		ip, err := InterfaceIP("eth0")
 		So(err, ShouldBeNil)
 		So(ip, ShouldMatchPattern, IpAddress)
 	})
