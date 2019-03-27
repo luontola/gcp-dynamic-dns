@@ -9,18 +9,41 @@ Syncs the current IP address, based on the local network interface, to Google Cl
 
 ## Using
 
-### Cloud DNS permissions
+Run this application's container using the command `["/app", "sync"]`, set to restart always, and it will sync the IP address automatically whenever it changes.
 
-You will need to grant the application permissions to update your Cloud DNS records.
-
-In the GCP console, under **IAM & admin > Service accounts**, create a service account for the application. Name it `dns-updater`, grant it the **DNS > DNS Administrator** role, create a key for it in JSON format and save it as `dns-updater-gcp-keys.json`.
+For a list of other commands, run `["/app", "help"]`. 
 
 
-### Application deployment
+### Environment variables
 
-In `DNS_NAMES` list all the domain names you wish to update. They all must be type `A` DNS records. Separate the domain names with one space. Each name must end with a period. The domains must be under the Cloud DNS of the project specified in `GOOGLE_PROJECT`.
+#### `INTERFACE_NAME` (optional)
 
-TODO
+Name of the network interface whose IP to use. If not defined, the program will detect the primary network interface automatically.
+
+Example: `eth0`
+
+
+#### `DNS_NAMES`
+
+In `DNS_NAMES` list all the domain names you wish to update. They all must be type `A` DNS records. Separate the domain names with one space. Each name must end with a period.
+
+Example: `example.com. subdomain.example.com. example.org.`
+
+
+#### `GOOGLE_PROJECT`
+
+The name of your Google Cloud project. The above mentioned DNS names must be hosted under this project's Cloud DNS.
+
+Example: `your-project-123456`
+
+
+#### `GOOGLE_APPLICATION_CREDENTIALS`
+
+Path to service account credentials with permissions to update your Cloud DNS records.
+
+Example: `/path/to/dns-updater-gcp-keys.json`
+
+> In the GCP console, under **IAM & admin > Service accounts**, create a service account for the application. Name it `dns-updater`, grant it the **DNS > DNS Administrator** role, create a key for it in JSON format and save it as `dns-updater-gcp-keys.json`.
 
 
 ## Developing
