@@ -7,6 +7,9 @@ RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 WORKDIR /go/src/app
 COPY src/app/Gopkg.toml src/app/Gopkg.lock /go/src/app/
 RUN dep ensure -v -vendor-only
+
+# build dependencies
+ENV GOFLAGS -tags=netgo
 RUN go build -v all
 
 # build the app

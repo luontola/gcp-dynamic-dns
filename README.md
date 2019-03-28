@@ -46,13 +46,6 @@ Example: `/path/to/dns-updater-gcp-keys.json`
 > In the GCP console, under **IAM & admin > Service accounts**, create a service account for the application. Name it `dns-updater`, grant it the **DNS > DNS Administrator** role, create a key for it in JSON format and save it as `dns-updater-gcp-keys.json`.
 
 
-## Troubleshooting
-
-### "lookup accounts.google.com: no such host"
-
-This error message indicates a name resolution problem. The workaround is to force the application to [use a pure Go resolver](https://golang.org/pkg/net/#hdr-Name_Resolution): set the `GODEBUG` environment variable to `netdns=go`.
-
-
 ## Developing
 
 Run tests and build the project
