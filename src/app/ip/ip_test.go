@@ -37,7 +37,7 @@ func InterfaceIPSpec() {
 	})
 }
 
-var IpAddress = `^\d+\.\d+\.\d+.\d+$`
+const IpAddress = `^\d+\.\d+\.\d+.\d+$`
 
 func ShouldMatchPattern(actual interface{}, expected ...interface{}) string {
 	pattern := expected[0]
