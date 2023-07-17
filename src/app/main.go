@@ -1,4 +1,4 @@
-// Copyright © 2019 Esko Luontola
+// Copyright © 2023 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -58,12 +58,18 @@ func sync() {
 
 	var previousIP string
 	for {
-		currentIP := readCurrentIP()
-		if currentIP != previousIP {
+		currentIP, err := readCurrentIP()
+		if err != nil {
+			log.Println("WARN: Failed to read the current IP: ", err)
+		} else if currentIP != previousIP {
 			handleChangedIP(currentIP, names, client)
 			previousIP = currentIP
 		}
-		time.Sleep(time.Minute)
+		if paramMode() == "service" {
+			time.Sleep(time.Minute * 5)
+		} else {
+			time.Sleep(time.Minute)
+		}
 	}
 }
 
@@ -72,7 +78,10 @@ func syncOnce() {
 	project := paramGoogleProject()
 	client := gcloud.Configure(project)
 
-	currentIP := readCurrentIP()
+	currentIP, err := readCurrentIP()
+	if err != nil {
+		log.Fatal("Failed to read the current IP: ", err)
+	}
 	handleChangedIP(currentIP, names, client)
 }
 
@@ -94,8 +103,10 @@ func handleChangedIP(currentIP string, names []string, client *gcloud.Client) {
 }
 
 func listIP() {
-	currentIP := readCurrentIP()
-
+	currentIP, err := readCurrentIP()
+	if err != nil {
+		log.Fatal("Failed to read the current IP: ", err)
+	}
 	log.Printf("Current IP is %v\n", currentIP)
 }
 
@@ -110,6 +121,33 @@ func listDns() {
 }
 
 // parameters
+
+func paramMode() string {
+	mode := os.Getenv("MODE")
+	if mode == "" {
+		return "service"
+	}
+	return mode
+}
+
+var serviceUrls []string
+var nextServiceUrl = 0
+
+func paramServiceUrl() string {
+	if serviceUrls == nil {
+		urls := os.Getenv("SERVICE_URLS")
+		if urls == "" {
+			urls = "https://ifconfig.me/ip http://checkip.dyndns.org/ http://ip1.dynupdate.no-ip.com/"
+		}
+		serviceUrls = strings.Fields(urls)
+	}
+	if len(serviceUrls) == 0 {
+		log.Fatal("No SERVICE_URLS defined")
+	}
+	url := serviceUrls[nextServiceUrl%len(serviceUrls)]
+	nextServiceUrl++
+	return url
+}
 
 func paramInterfaceName() string {
 	return os.Getenv("INTERFACE_NAME")
@@ -133,18 +171,25 @@ func paramGoogleProject() string {
 
 // operations
 
-func readCurrentIP() string {
+func readCurrentIP() (string, error) {
 	var currentIP string
 	var err error
-	if name := paramInterfaceName(); name != "" {
-		currentIP, err = ip.InterfaceIP(name)
+	mode := paramMode()
+
+	if mode == "service" {
+		currentIP, err = ip.ExternalServiceIP(paramServiceUrl())
+
+	} else if mode == "interface" {
+		if name := paramInterfaceName(); name != "" {
+			currentIP, err = ip.InterfaceIP(name)
+		} else {
+			currentIP, err = ip.OutgoingIP()
+		}
+
 	} else {
-		currentIP, err = ip.OutgoingIP()
+		log.Fatal("Invalid MODE:", mode)
 	}
-	if err != nil {
-		log.Fatal("Failed to read current IP: ", err)
-	}
-	return currentIP
+	return currentIP, err
 }
 
 func readDnsRecords(client *gcloud.Client, names []string) gcloud.DnsRecords {

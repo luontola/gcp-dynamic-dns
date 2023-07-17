@@ -1,4 +1,4 @@
-// Copyright © 2019 Esko Luontola
+// Copyright © 2023 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -6,8 +6,41 @@ package ip
 
 import (
 	"errors"
+	"fmt"
+	"io"
+	"log"
 	"net"
+	"net/http"
+	"regexp"
+	"time"
 )
+
+func ExternalServiceIP(url string) (string, error) {
+	log.Println("Asking for our external IP from", url)
+	client := &http.Client{
+		Timeout: time.Minute,
+	}
+	response, err := client.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != 200 {
+		return "", fmt.Errorf("the server returned status %v", response.Status)
+	}
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+	body := string(bodyBytes)
+
+	ipAddressPattern := regexp.MustCompile(`\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b`)
+	found := ipAddressPattern.FindString(body)
+	if found != "" && net.ParseIP(found) != nil {
+		return found, nil
+	}
+	return "", fmt.Errorf("the response did not contain an IP address: %v", body)
+}
 
 func OutgoingIP() (string, error) {
 	conn, err := net.Dial("udp", "8.8.8.8:80")

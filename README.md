@@ -15,7 +15,25 @@ For a list of other commands, run the `help` command.
 
 ### Environment variables
 
-#### `INTERFACE_NAME` (optional)
+#### `MODE` (optional)
+
+The method for determining your public IP address. Possible values:
+
+- `service` (default) - Asks a 3rd party web service for your external IP address.
+- `interface` - Asks your operating system for the IP address assigned to a network interface.
+- TODO: `upnp` - Asks your network router for its external IP address using Universal Plug and Play.
+
+Default: `service`
+
+#### `SERVICE_URLS` (optional, MODE=service)
+
+Web addresses of services which report your public IP address. Multiple services may be separated by space, in which
+case they will be used in a round-robin fashion. The continuous check interval is 5 minutes, so use more than once
+service to call each individual service less often.
+
+Default: `https://ifconfig.me/ip http://checkip.dyndns.org/ http://ip1.dynupdate.no-ip.com/`
+
+#### `INTERFACE_NAME` (optional, MODE=interface)
 
 Name of the network interface whose IP to use. If not defined, the program will detect the primary network interface
 automatically.
