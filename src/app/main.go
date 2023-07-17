@@ -59,11 +59,14 @@ func sync() {
 	var previousIP string
 	for {
 		currentIP, err := readCurrentIP()
+
 		if err != nil {
 			log.Println("WARN: Failed to read the current IP: ", err)
 		} else if currentIP != previousIP {
 			handleChangedIP(currentIP, names, client)
 			previousIP = currentIP
+		} else {
+			log.Printf("Current IP is %v\n", currentIP)
 		}
 		if paramMode() == "service" {
 			time.Sleep(time.Minute * 5)
@@ -86,9 +89,7 @@ func syncOnce() {
 }
 
 func handleChangedIP(currentIP string, names []string, client *gcloud.Client) {
-	log.Printf("Current IP is %v\n", currentIP)
-
-	log.Printf("Updating DNS records %v\n", names)
+	log.Printf("Updating IP %v to DNS records %v\n", currentIP, names)
 	records := readDnsRecords(client, names)
 	updated := updateDnsRecords(client, records, []string{currentIP})
 
