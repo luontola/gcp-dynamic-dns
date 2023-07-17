@@ -145,7 +145,8 @@ func paramServiceUrl() string {
 	if len(serviceUrls) == 0 {
 		log.Fatal("No SERVICE_URLS defined")
 	}
-	url := serviceUrls[nextServiceUrl%len(serviceUrls)]
+	nextServiceUrl = nextServiceUrl % len(serviceUrls)
+	url := serviceUrls[nextServiceUrl]
 	nextServiceUrl++
 	return url
 }
