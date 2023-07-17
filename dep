@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-set -eu
-
-cd $(dirname $0)
-export GOPATH=$(pwd)
-
-cd src/app
-dep "$@"

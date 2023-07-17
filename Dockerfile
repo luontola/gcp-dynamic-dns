@@ -1,16 +1,11 @@
-FROM golang:1.12 AS builder
-
-# tools
-RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+FROM golang:1.20 AS builder
 
 # download dependencies
 WORKDIR /go/src/app
-COPY src/app/Gopkg.toml src/app/Gopkg.lock /go/src/app/
-RUN dep ensure -v -vendor-only
+COPY src/app/go.mod src/app/go.sum /go/src/app/
+RUN go mod download && go mod verify
 
-# build dependencies
 ENV GOFLAGS -tags=netgo
-RUN go build -v all
 
 # build the app
 COPY src/app /go/src/app
