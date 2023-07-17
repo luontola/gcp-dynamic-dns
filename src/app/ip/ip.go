@@ -64,7 +64,11 @@ func InterfaceIP(name string) (string, error) {
 		return "", err
 	}
 	for _, addr := range addrs {
-		return addr.(*net.IPNet).IP.String(), nil
+		// an interface may have multiple addresses, but we're interested only in the IPv4 address, not IPv6 addresses
+		ip4 := addr.(*net.IPNet).IP.To4()
+		if ip4 != nil {
+			return ip4.String(), nil
+		}
 	}
-	return "", errors.New("interface had no addresses")
+	return "", errors.New("interface had no IPv4 addresses")
 }

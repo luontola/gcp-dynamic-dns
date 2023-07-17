@@ -53,11 +53,17 @@ func OutgoingIPSpec() {
 func InterfaceIPSpec() {
 	Convey("returns loopback interface's IP address", func() {
 		ip, err := InterfaceIP("lo")
+		if err != nil {
+			ip, err = InterfaceIP("lo0") // for running tests on Mac
+		}
 		So(err, ShouldBeNil)
 		So(ip, ShouldEqual, "127.0.0.1")
 	})
 	Convey("returns named interface's IP address", func() {
 		ip, err := InterfaceIP("eth0")
+		if err != nil {
+			ip, err = InterfaceIP("en0") // for running tests on Mac
+		}
 		So(err, ShouldBeNil)
 		So(ip, ShouldMatchPattern, IpAddress)
 	})
