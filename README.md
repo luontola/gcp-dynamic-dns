@@ -1,6 +1,7 @@
 # Google Cloud Dynamic DNS Client
 
-Syncs the current IP address, based on the local network interface, to Google Cloud DNS records.
+Syncs the current IP address to Google Cloud DNS records. Can discover your public IP based on
+(1) a 3rd party web service, or (2) directly from the local network interface.
 
 [![Docker Build Status](https://img.shields.io/docker/cloud/build/luontola/gcp-dynamic-dns.svg)](https://hub.docker.com/r/luontola/gcp-dynamic-dns)
 
