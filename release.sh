@@ -16,3 +16,4 @@ git tag -s -m "Release $RELEASE_VERSION" "v$RELEASE_VERSION"
 docker tag luontola/gcp-dynamic-dns "luontola/gcp-dynamic-dns:$RELEASE_VERSION"
 docker push luontola/gcp-dynamic-dns
 docker push "luontola/gcp-dynamic-dns:$RELEASE_VERSION"
+git push origin master "v$RELEASE_VERSION"
