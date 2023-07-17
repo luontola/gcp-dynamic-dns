@@ -131,24 +131,26 @@ func paramMode() string {
 	return mode
 }
 
-var serviceUrls []string
 var nextServiceUrl = 0
 
 func paramServiceUrl() string {
-	if serviceUrls == nil {
-		urls := os.Getenv("SERVICE_URLS")
-		if urls == "" {
-			urls = "https://ifconfig.me/ip http://checkip.dyndns.org/ http://ip1.dynupdate.no-ip.com/"
-		}
-		serviceUrls = strings.Fields(urls)
-	}
-	if len(serviceUrls) == 0 {
-		log.Fatal("No SERVICE_URLS defined")
-	}
+	serviceUrls := paramServiceUrls()
 	nextServiceUrl = nextServiceUrl % len(serviceUrls)
 	url := serviceUrls[nextServiceUrl]
 	nextServiceUrl++
 	return url
+}
+
+func paramServiceUrls() []string {
+	urlsString := os.Getenv("SERVICE_URLS")
+	if urlsString == "" {
+		urlsString = "https://ifconfig.me/ip http://checkip.dyndns.org/ http://ip1.dynupdate.no-ip.com/"
+	}
+	urls := strings.Fields(urlsString)
+	if len(urls) == 0 {
+		log.Fatal("SERVICE_URLS was empty")
+	}
+	return urls
 }
 
 func paramInterfaceName() string {
