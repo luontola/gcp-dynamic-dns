@@ -8,8 +8,9 @@ services:
     image: luontola/gcp-dynamic-dns
     network_mode: host
     environment:
+      MODE: service
       DNS_NAMES: dyndns-test1.luontola.fi. dyndns-test2.luontola.fi.
       GOOGLE_PROJECT: www-prod-204113
       GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/gcp-keys.json
     volumes:
-    - ../www-prod-dns-admin-keys.json:/var/secrets/gcp-keys.json:ro
+      - ../www-prod-dns-admin-keys.json:/var/secrets/gcp-keys.json:ro

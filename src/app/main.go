@@ -132,6 +132,8 @@ func readCurrentIP(conf *config.Config) (string, error) {
 		} else {
 			currentIP, err = ip.OutgoingIP()
 		}
+	case "upnp":
+		currentIP, err = ip.UpnpRouterIP()
 	default:
 		log.Fatal("Invalid MODE:", mode)
 	}

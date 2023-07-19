@@ -15,6 +15,7 @@ func TestIP(t *testing.T) {
 	Convey("ExternalServiceIPSpec", t, ExternalServiceIPSpec)
 	Convey("OutgoingIPSpec", t, OutgoingIPSpec)
 	Convey("InterfaceIPSpec", t, InterfaceIPSpec)
+	Convey("UpnpRouterIPSpec", t, UpnpRouterIPSpec)
 }
 
 func ExternalServiceIPSpec() {
@@ -64,6 +65,18 @@ func InterfaceIPSpec() {
 		if err != nil {
 			ip, err = InterfaceIP("en0") // for running tests on Mac
 		}
+		So(err, ShouldBeNil)
+		So(ip, ShouldMatchPattern, IpAddress)
+	})
+}
+
+func UpnpRouterIPSpec() {
+	// XXX: This test doesn't work as part of docker build, or if the firewall blocks the connection,
+	//      so it's disabled by default. The macOS firewall may require building the tests binary with
+	//      `go test app/ip -o ip.test.tmp` and running the binary manually, so that Mac can remember
+	//      the firewall setting for it when it runs a second time.
+	SkipConvey("automatically detects the IP address by asking the router via UPnP", func() {
+		ip, err := UpnpRouterIP()
 		So(err, ShouldBeNil)
 		So(ip, ShouldMatchPattern, IpAddress)
 	})

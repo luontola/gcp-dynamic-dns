@@ -1,7 +1,7 @@
 # Google Cloud Dynamic DNS Client
 
 Syncs the current IP address to Google Cloud DNS records. Can discover your public IP based on
-(1) a 3rd party web service, or (2) directly from the local network interface.
+(1) a 3rd party web service, (2) directly from the local network interface, or (3) the network router using UPnP.
 
 [![Docker Build Status](https://img.shields.io/docker/cloud/build/luontola/gcp-dynamic-dns.svg)](https://hub.docker.com/r/luontola/gcp-dynamic-dns)
 
@@ -21,7 +21,7 @@ The method for determining your public IP address. Possible values:
 
 - `service` (default) - Asks a 3rd party web service for your external IP address.
 - `interface` - Asks your operating system for the IP address assigned to a network interface.
-- TODO: `upnp` - Asks your network router for its external IP address using Universal Plug and Play.
+- `upnp` - Asks your network router for its external IP address using Universal Plug and Play.
 
 Default: `service`
 

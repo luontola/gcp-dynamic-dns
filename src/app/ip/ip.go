@@ -5,8 +5,11 @@
 package ip
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"github.com/huin/goupnp/dcps/internetgateway2"
+	"golang.org/x/sync/errgroup"
 	"io"
 	"net"
 	"net/http"
@@ -69,4 +72,77 @@ func InterfaceIP(name string) (string, error) {
 		}
 	}
 	return "", errors.New("interface had no IPv4 addresses")
+}
+
+type RouterClient interface {
+	GetExternalIPAddress() (
+		NewExternalIPAddress string,
+		err error,
+	)
+}
+
+func detectRouterClients(ctx context.Context) ([]RouterClient, error) {
+	tasks, _ := errgroup.WithContext(ctx)
+	// request each type of client in parallel
+	var ip1Clients []*internetgateway2.WANIPConnection1
+	tasks.Go(func() error {
+		var err error
+		ip1Clients, _, err = internetgateway2.NewWANIPConnection1Clients()
+		return err
+	})
+	var ip2Clients []*internetgateway2.WANIPConnection2
+	tasks.Go(func() error {
+		var err error
+		ip2Clients, _, err = internetgateway2.NewWANIPConnection2Clients()
+		return err
+	})
+	var ppp1Clients []*internetgateway2.WANPPPConnection1
+	tasks.Go(func() error {
+		var err error
+		ppp1Clients, _, err = internetgateway2.NewWANPPPConnection1Clients()
+		return err
+	})
+
+	if err := tasks.Wait(); err != nil {
+		return nil, err
+	}
+
+	var clients []RouterClient
+	for _, client := range ip2Clients {
+		clients = append(clients, client)
+	}
+	for _, client := range ip1Clients {
+		clients = append(clients, client)
+	}
+	for _, client := range ppp1Clients {
+		clients = append(clients, client)
+	}
+	if len(clients) == 0 {
+		return nil, errors.New("no UPnP services found")
+	}
+	return clients, nil
+}
+
+var routerClients []RouterClient
+
+func UpnpRouterIP() (string, error) {
+	var err error
+	if routerClients == nil { // detect the internet gateway only once
+		routerClients, err = detectRouterClients(context.Background())
+		if err != nil {
+			return "", err
+		}
+	}
+	// if multiple clients were found, try them all until one which works was found
+	for _, routerClient := range routerClients {
+		var ip string
+		ip, err = routerClient.GetExternalIPAddress()
+		if err == nil && ip != "" { // sometimes the IP is an empty string even though there is no error
+			routerClients = []RouterClient{routerClient} // remember the client which worked and keep using only it
+			return ip, nil
+		}
+	}
+	// none of the clients worked
+	routerClients = nil // re-detect the internet gateway to improve resiliency
+	return "", fmt.Errorf("could not get the external IP address through UPnP: %w", err)
 }

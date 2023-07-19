@@ -3,10 +3,11 @@ module app
 go 1.20
 
 require (
-	github.com/davecgh/go-spew v1.1.1
+	github.com/huin/goupnp v1.2.0
 	github.com/smartystreets/goconvey v1.8.1
 	golang.org/x/net v0.12.0
 	golang.org/x/oauth2 v0.10.0
+	golang.org/x/sync v0.3.0
 	google.golang.org/api v0.132.0
 )
 
