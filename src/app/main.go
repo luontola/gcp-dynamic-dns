@@ -102,7 +102,7 @@ func listIP(conf *config.Config) {
 	if err != nil {
 		log.Fatal("Failed to read the current IP: ", err)
 	}
-	log.Printf("Current IP is %v\n", currentIP)
+	println(currentIP)
 }
 
 func listDns(conf *config.Config) {
