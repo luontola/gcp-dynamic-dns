@@ -24,6 +24,8 @@ The method for determining your public IP address. Possible values:
 - `service` (default) - Asks a 3rd party web service for your external IP address.
 - `interface` - Asks your operating system for the IP address assigned to a network interface.
 - `upnp` - Asks your network router for its external IP address using Universal Plug and Play.
+    - Not every router has UPnP enabled and a firewall may block it as well, so to debug issues, first check
+      if [`upnpc -s`](https://miniupnp.tuxfamily.org/) reports the ExternalIPAddress.
 
 Default: `service`
 
