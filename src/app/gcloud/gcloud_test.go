@@ -94,6 +94,8 @@ func UpdateDnsRecordValuesSpec() {
 				{Name: "zone1.com.", Rrdatas: []string{"2.2.2.2"}},
 			},
 		})
+		So(ToDnsRecords("zone1", changes), ShouldResemble, DnsRecords{
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"2.2.2.2"}}}})
 	})
 
 	Convey("multiple records", func() {
@@ -114,6 +116,9 @@ func UpdateDnsRecordValuesSpec() {
 				{Name: "www.zone1.com.", Rrdatas: []string{"2.2.2.2"}},
 			},
 		})
+		So(ToDnsRecords("zone1", changes), ShouldResemble, DnsRecords{
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"2.2.2.2"}}},
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "www.zone1.com.", Rrdatas: []string{"2.2.2.2"}}}})
 	})
 
 	Convey("multiple values", func() {
@@ -131,6 +136,8 @@ func UpdateDnsRecordValuesSpec() {
 				{Name: "zone1.com.", Rrdatas: []string{"3.3.3.3", "4.4.4.4"}},
 			},
 		})
+		So(ToDnsRecords("zone1", changes), ShouldResemble, DnsRecords{
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"3.3.3.3", "4.4.4.4"}}}})
 	})
 
 	Convey("some records up to date", func() {
@@ -149,6 +156,8 @@ func UpdateDnsRecordValuesSpec() {
 				{Name: "www.zone1.com.", Rrdatas: []string{"2.2.2.2"}},
 			},
 		})
+		So(ToDnsRecords("zone1", changes), ShouldResemble, DnsRecords{
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "www.zone1.com.", Rrdatas: []string{"2.2.2.2"}}}})
 	})
 
 	Convey("all records up to date", func() {

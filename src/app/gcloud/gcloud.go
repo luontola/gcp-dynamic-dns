@@ -142,16 +142,15 @@ func (this *Client) ResourceRecordSets(managedZone string) ([]*dns.ResourceRecor
 func (this *Client) UpdateDnsRecords(records DnsRecords, newValues []string) (DnsRecords, error) {
 	var updated DnsRecords
 	for managedZone, recordsInZone := range records.GroupByZone() {
-		changes := changesToUpdateDnsRecordValues(recordsInZone, newValues)
-		if changes == nil {
+		plannedChanges := changesToUpdateDnsRecordValues(recordsInZone, newValues)
+		if plannedChanges == nil {
 			continue
 		}
-		resp, err := this.dnsService.Changes.Create(this.project, managedZone, changes).Context(this.context).Do()
+		doneChanges, err := this.dnsService.Changes.Create(this.project, managedZone, plannedChanges).Context(this.context).Do()
 		if err != nil {
 			return nil, err
 		}
-
-		updated = append(updated, ToDnsRecords(managedZone, resp.Additions)...)
+		updated = append(updated, ToDnsRecords(managedZone, doneChanges)...)
 	}
 	return updated, nil
 }
@@ -185,9 +184,9 @@ func (record DnsRecord) NameAndType() string {
 
 type DnsRecords []*DnsRecord
 
-func ToDnsRecords(managedZone string, records []*dns.ResourceRecordSet) DnsRecords {
+func ToDnsRecords(managedZone string, change *dns.Change) DnsRecords {
 	var results DnsRecords
-	for _, record := range records {
+	for _, record := range change.Additions {
 		results = append(results, &DnsRecord{ManagedZone: managedZone, ResourceRecordSet: record})
 	}
 	return results
