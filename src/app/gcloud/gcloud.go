@@ -1,4 +1,4 @@
-// Copyright © 2018 Esko Luontola
+// Copyright © 2023 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -108,7 +108,7 @@ func (this *Client) DnsRecords() (DnsRecords, error) {
 			return nil, err
 		}
 		for _, rrset := range rrsets {
-			record := &DnsRecord{zone.Name, rrset}
+			record := &DnsRecord{ManagedZone: zone.Name, ResourceRecordSet: rrset}
 			records = append(records, record)
 		}
 
@@ -175,6 +175,7 @@ func changesToUpdateDnsRecordValues(records DnsRecords, newValues []string) *dns
 
 type DnsRecord struct {
 	ManagedZone string
+	OldRrdatas  []string
 	*dns.ResourceRecordSet
 }
 

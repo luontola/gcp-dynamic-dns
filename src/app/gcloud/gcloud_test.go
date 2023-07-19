@@ -19,9 +19,9 @@ func TestGCloud(t *testing.T) {
 
 func FilterDnsRecordsByNameSpec() {
 	records := []*DnsRecord{
-		{"example", &dns.ResourceRecordSet{Name: "foo.example.com."}},
-		{"example", &dns.ResourceRecordSet{Name: "bar.example.com."}},
-		{"example", &dns.ResourceRecordSet{Name: "baz.example.com."}},
+		{ManagedZone: "example", ResourceRecordSet: &dns.ResourceRecordSet{Name: "foo.example.com."}},
+		{ManagedZone: "example", ResourceRecordSet: &dns.ResourceRecordSet{Name: "bar.example.com."}},
+		{ManagedZone: "example", ResourceRecordSet: &dns.ResourceRecordSet{Name: "baz.example.com."}},
 	}
 
 	Convey("Empty search", func() {
@@ -48,9 +48,9 @@ func FilterDnsRecordsByNameSpec() {
 
 func FilterDnsRecordsByTypeSpec() {
 	records := []*DnsRecord{
-		{"example", &dns.ResourceRecordSet{Name: "a1.example.com.", Type: "A"}},
-		{"example", &dns.ResourceRecordSet{Name: "cname.example.com.", Type: "CNAME"}},
-		{"example", &dns.ResourceRecordSet{Name: "a2.example.com.", Type: "A"}},
+		{ManagedZone: "example", ResourceRecordSet: &dns.ResourceRecordSet{Name: "a1.example.com.", Type: "A"}},
+		{ManagedZone: "example", ResourceRecordSet: &dns.ResourceRecordSet{Name: "cname.example.com.", Type: "CNAME"}},
+		{ManagedZone: "example", ResourceRecordSet: &dns.ResourceRecordSet{Name: "a2.example.com.", Type: "A"}},
 	}
 
 	records = filterDnsRecordsByType(records, "A")
@@ -62,18 +62,18 @@ func FilterDnsRecordsByTypeSpec() {
 
 func GroupDnsRecordsByZoneSpec() {
 	records := DnsRecords{
-		{"zone1", &dns.ResourceRecordSet{Name: "zone1.com."}},
-		{"zone2", &dns.ResourceRecordSet{Name: "zone2.com."}},
-		{"zone2", &dns.ResourceRecordSet{Name: "www.zone2.com."}},
+		{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone1.com."}},
+		{ManagedZone: "zone2", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone2.com."}},
+		{ManagedZone: "zone2", ResourceRecordSet: &dns.ResourceRecordSet{Name: "www.zone2.com."}},
 	}
 
 	So(records.GroupByZone(), ShouldResemble, map[string]DnsRecords{
 		"zone1": {
-			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com."}},
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone1.com."}},
 		},
 		"zone2": {
-			{"zone2", &dns.ResourceRecordSet{Name: "zone2.com."}},
-			{"zone2", &dns.ResourceRecordSet{Name: "www.zone2.com."}},
+			{ManagedZone: "zone2", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone2.com."}},
+			{ManagedZone: "zone2", ResourceRecordSet: &dns.ResourceRecordSet{Name: "www.zone2.com."}},
 		},
 	})
 }
@@ -81,7 +81,7 @@ func GroupDnsRecordsByZoneSpec() {
 func UpdateDnsRecordValuesSpec() {
 	Convey("one record, one value", func() {
 		records := DnsRecords{
-			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
 		}
 
 		changes := changesToUpdateDnsRecordValues(records, []string{"2.2.2.2"})
@@ -98,8 +98,8 @@ func UpdateDnsRecordValuesSpec() {
 
 	Convey("multiple records", func() {
 		records := DnsRecords{
-			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
-			{"zone1", &dns.ResourceRecordSet{Name: "www.zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "www.zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
 		}
 
 		changes := changesToUpdateDnsRecordValues(records, []string{"2.2.2.2"})
@@ -118,7 +118,7 @@ func UpdateDnsRecordValuesSpec() {
 
 	Convey("multiple values", func() {
 		records := DnsRecords{
-			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1", "2.2.2.2"}}},
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"1.1.1.1", "2.2.2.2"}}},
 		}
 
 		changes := changesToUpdateDnsRecordValues(records, []string{"3.3.3.3", "4.4.4.4"})
@@ -135,8 +135,8 @@ func UpdateDnsRecordValuesSpec() {
 
 	Convey("some records up to date", func() {
 		records := DnsRecords{
-			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"2.2.2.2"}}},
-			{"zone1", &dns.ResourceRecordSet{Name: "www.zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"2.2.2.2"}}},
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "www.zone1.com.", Rrdatas: []string{"1.1.1.1"}}},
 		}
 
 		changes := changesToUpdateDnsRecordValues(records, []string{"2.2.2.2"})
@@ -153,8 +153,8 @@ func UpdateDnsRecordValuesSpec() {
 
 	Convey("all records up to date", func() {
 		records := DnsRecords{
-			{"zone1", &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"2.2.2.2"}}},
-			{"zone1", &dns.ResourceRecordSet{Name: "www.zone1.com.", Rrdatas: []string{"2.2.2.2"}}},
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "zone1.com.", Rrdatas: []string{"2.2.2.2"}}},
+			{ManagedZone: "zone1", ResourceRecordSet: &dns.ResourceRecordSet{Name: "www.zone1.com.", Rrdatas: []string{"2.2.2.2"}}},
 		}
 
 		changes := changesToUpdateDnsRecordValues(records, []string{"2.2.2.2"})
