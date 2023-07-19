@@ -186,8 +186,14 @@ type DnsRecords []*DnsRecord
 
 func ToDnsRecords(managedZone string, change *dns.Change) DnsRecords {
 	var results DnsRecords
-	for _, record := range change.Additions {
-		results = append(results, &DnsRecord{ManagedZone: managedZone, ResourceRecordSet: record})
+	for _, addition := range change.Additions {
+		result := &DnsRecord{ManagedZone: managedZone, ResourceRecordSet: addition}
+		for _, deletion := range change.Deletions {
+			if deletion.Name == addition.Name {
+				result.OldRrdatas = deletion.Rrdatas
+			}
+		}
+		results = append(results, result)
 	}
 	return results
 }

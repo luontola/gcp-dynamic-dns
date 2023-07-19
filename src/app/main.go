@@ -92,7 +92,7 @@ func handleChangedIP(currentIP string, dnsNames []string, client *gcloud.Client)
 	} else {
 		log.Printf("Updated %d DNS records:\n", len(updated))
 		for _, record := range updated {
-			log.Printf("    %s -> %v\n", record.Name, record.Rrdatas)
+			log.Printf("    %v  %v -> %v\n", record.Name, record.OldRrdatas, record.Rrdatas)
 		}
 	}
 }
