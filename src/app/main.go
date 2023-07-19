@@ -61,8 +61,6 @@ func sync(conf *config.Config) {
 		} else if currentIP != previousIP {
 			handleChangedIP(currentIP, conf.DnsNames, client)
 			previousIP = currentIP
-		} else {
-			log.Printf("Current IP is %v\n", currentIP)
 		}
 		if conf.Mode == "service" {
 			time.Sleep(time.Minute * 5)
