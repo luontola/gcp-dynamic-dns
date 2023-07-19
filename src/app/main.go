@@ -57,7 +57,7 @@ func sync(conf *config.Config) {
 		currentIP, err := readCurrentIP(conf)
 
 		if err != nil {
-			log.Println("WARN: Failed to read the current IP: ", err)
+			log.Println("WARN: Failed to read the current IP:", err)
 		} else if currentIP != previousIP {
 			handleChangedIP(currentIP, conf.DnsNames, client)
 			previousIP = currentIP
@@ -122,6 +122,9 @@ func readCurrentIP(conf *config.Config) (string, error) {
 	case "service":
 		url := conf.NextServiceUrl()
 		currentIP, err = ip.ExternalServiceIP(url)
+		if err != nil {
+			err = fmt.Errorf("failure using external service %v: %w", url, err)
+		}
 	case "interface":
 		if name := conf.InterfaceName; name != "" {
 			currentIP, err = ip.InterfaceIP(name)

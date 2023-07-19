@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"regexp"
@@ -16,7 +15,6 @@ import (
 )
 
 func ExternalServiceIP(url string) (string, error) {
-	log.Println("Asking for our external IP from", url)
 	client := &http.Client{
 		Timeout: time.Minute,
 	}
