@@ -9,9 +9,9 @@ import (
 	"app/gcloud"
 	"app/ip"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -108,8 +108,9 @@ func listIP(conf *config.Config) {
 func listDns(conf *config.Config) {
 	client := gcloud.Configure(conf.GoogleProject)
 	records := readDnsRecords(client, conf.DnsNames)
-
-	spew.Dump(records)
+	for _, record := range records {
+		println(record.Name, record.Type, record.Ttl, " ", strings.Join(record.Rrdatas, " "))
+	}
 }
 
 // operations
