@@ -5,15 +5,37 @@ Syncs the current IP address to Google Cloud DNS records. Can discover your publ
 
 Works only for IPv4 addresses.
 
-[![Docker Build Status](https://img.shields.io/docker/cloud/build/luontola/gcp-dynamic-dns.svg)](https://hub.docker.com/r/luontola/gcp-dynamic-dns)
+This project is distributed [as a Docker image](https://hub.docker.com/r/luontola/gcp-dynamic-dns).
+(Or if you're familiar with [Golang](https://go.dev/), you may build
+it [from source](https://github.com/luontola/gcp-dynamic-dns) yourself.)
 
 ## Using
 
-Run this application's [container](https://hub.docker.com/r/luontola/gcp-dynamic-dns) using the command `sync` (
-entrypoint `/app`), `host` network and restart policy `always`. It will then sync the IP address automatically whenever
-it changes.
+Run this application's [container](https://hub.docker.com/r/luontola/gcp-dynamic-dns) using the command `sync` and
+restart policy `always`. That will sync the IP address automatically whenever it changes.
+
+At minimum, configure the environment variables `DNS_NAMES`, `GOOGLE_PROJECT` and `GOOGLE_APPLICATION_CREDENTIALS`.
+If you change the `MODE` from its default, you'll also need to set the container's network mode to `host`.
 
 For a list of other commands, run the `help` command.
+
+### Example [Docker Compose](https://docs.docker.com/compose/) configuration
+
+```yaml
+version: '2.4'
+services:
+  dyndns:
+    image: luontola/gcp-dynamic-dns:1.5
+    command: sync
+    network_mode: host
+    environment:
+      DNS_NAMES: example.com. www.example.com.
+      GOOGLE_PROJECT: example-123456
+      GOOGLE_APPLICATION_CREDENTIALS: /gcp-keys.json
+    volumes:
+      - /path/to/gcp-dns-admin-keys.json:/gcp-keys.json:ro
+    restart: always
+```
 
 ### Environment variables
 
