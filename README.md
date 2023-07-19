@@ -31,7 +31,7 @@ Web addresses of services which report your public IP address. Multiple services
 case they will be used in a round-robin fashion. The continuous check interval is 5 minutes, so use more than once
 service to call each individual service less often.
 
-Default: `https://ifconfig.me/ip http://checkip.dyndns.org/ http://ip1.dynupdate.no-ip.com/`
+Default: `https://ipv4.icanhazip.com/ https://checkip.amazonaws.com/ https://ifconfig.me/ip https://ipinfo.io/ip`
 
 #### `INTERFACE_NAME` (optional, MODE=interface)
 

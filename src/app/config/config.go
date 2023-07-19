@@ -22,7 +22,7 @@ type Config struct {
 func FromEnv() *Config {
 	config := &Config{
 		Mode:                envOrDefault("MODE", "service"),
-		ServiceUrls:         strings.Fields(envOrDefault("SERVICE_URLS", "https://ifconfig.me/ip http://checkip.dyndns.org/ http://ip1.dynupdate.no-ip.com/")),
+		ServiceUrls:         strings.Fields(envOrDefault("SERVICE_URLS", "https://ipv4.icanhazip.com/ https://checkip.amazonaws.com/ https://ifconfig.me/ip https://ipinfo.io/ip")),
 		nextServiceUrlIndex: 0,
 		InterfaceName:       envOrDefault("INTERFACE_NAME", ""),
 		DnsNames:            strings.Fields(envOrFail("DNS_NAMES")),
