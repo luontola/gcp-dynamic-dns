@@ -3,6 +3,8 @@
 Syncs the current IP address to Google Cloud DNS records. Can discover your public IP based on
 (1) a 3rd party web service, (2) directly from the local network interface, or (3) the network router using UPnP.
 
+Works only for IPv4 addresses.
+
 [![Docker Build Status](https://img.shields.io/docker/cloud/build/luontola/gcp-dynamic-dns.svg)](https://hub.docker.com/r/luontola/gcp-dynamic-dns)
 
 ## Using
