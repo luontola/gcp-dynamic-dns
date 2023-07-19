@@ -1,4 +1,4 @@
-// Copyright © 2018 Esko Luontola
+// Copyright © 2023 Esko Luontola
 // This software is released under the Apache License 2.0.
 // The license text is at http://www.apache.org/licenses/LICENSE-2.0
 
@@ -159,6 +159,6 @@ func UpdateDnsRecordValuesSpec() {
 
 		changes := changesToUpdateDnsRecordValues(records, []string{"2.2.2.2"})
 
-		So(changes, ShouldEqual, nil)
+		So(changes, ShouldBeNil)
 	})
 }
